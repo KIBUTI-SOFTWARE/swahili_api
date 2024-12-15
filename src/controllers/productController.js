@@ -1,0 +1,151 @@
+const Product = require('../models/Product');
+const Shop = require('../models/Shop');
+
+exports.createProduct = async (req, res) => {
+  try {
+    // First check if the user has a shop
+    const shop = await Shop.findOne({ owner: req.user.id });
+    if (!shop) {
+      return res.status(400).json({
+        success: false,
+        errors: ['You must create a shop before adding products'],
+        data: null
+      });
+    }
+
+    // Validate input
+    const { name, price, category } = req.body;
+    const errors = [];
+
+    if (!name) errors.push('Product name is required');
+    if (!price) errors.push('Price is required');
+    if (!category) errors.push('Category is required');
+
+    if (errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        errors: errors,
+        data: null
+      });
+    }
+
+    // Create new product with the shop ID
+    const product = new Product({
+      ...req.body,
+      shop: shop._id  // Use the shop's ID
+    });
+
+    await product.save();
+
+    res.status(201).json({
+      success: true,
+      data: { product },
+      errors: []
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      data: null,
+      errors: [err.message]
+    });
+  }
+};
+exports.getAllProducts = async (req, res) => {
+  try {
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skipIndex = (page - 1) * limit;
+
+    // Filtering and searching
+    const filter = {};
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+    if (req.query.search) {
+      filter.name = { $regex: req.query.search, $options: 'i' };
+    }
+
+    // Sorting
+    const sortField = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
+    const sort = { [sortField]: sortOrder };
+
+    // Query products with pagination
+    const totalProducts = await Product.countDocuments(filter);
+    const products = await Product.find(filter)
+      .populate('category', 'name')
+      .populate('shop', 'name')
+      .sort(sort)
+      .limit(limit)
+      .skip(skipIndex);
+
+    res.json({
+      success: true,
+      data: {
+        products,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalProducts / limit),
+          totalProducts,
+          limit
+        }
+      },
+      errors: []
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      data: null,
+      errors: [err.message]
+    });
+  }
+};
+
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('category', 'name')
+      .populate('shop', 'name');
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id, 
+      req.body, 
+      { new: true, runValidators: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
