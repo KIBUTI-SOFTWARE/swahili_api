@@ -5,10 +5,10 @@ const { uploadToCloudinary } = require('../config/cloudinary');
 // Validation helper
 const validateCategoryInput = (data) => {
   const errors = [];
-  
+
   if (!data.name) errors.push('Category name is required');
   if (!data.description) errors.push('Description is required');
-  
+
   return errors;
 };
 
@@ -52,7 +52,7 @@ exports.createCategory = async (req, res) => {
         });
       }
       level = parentCategory.level + 1;
-      
+
       // Update parent's subcategories
       await Category.findByIdAndUpdate(
         req.body.parentCategory,
@@ -70,21 +70,21 @@ exports.createCategory = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      errors: [],
-      data: { category }
+      data: { category },
+      errors: []
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const { 
+    const {
       parentOnly,
       includeInactive,
       search,
@@ -121,8 +121,8 @@ exports.getAllCategories = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
@@ -132,25 +132,25 @@ exports.getCategoryById = async (req, res) => {
     const category = await Category.findById(req.params.id)
       .populate('parentCategory', 'name')
       .populate('subCategories', 'name');
-    
+
     if (!category) {
       return res.status(404).json({
         success: false,
-        errors: ['Category not found'],
-        data: null
+        data: null,
+        errors: ['Category not found']
       });
     }
-    
+
     res.json({
       success: true,
-      errors: [],
-      data: { category }
+      data: { category },
+      errors: []
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
@@ -161,8 +161,8 @@ exports.updateCategory = async (req, res) => {
     if (errors.length > 0) {
       return res.status(400).json({
         success: false,
-        errors,
-        data: null
+        data: null,
+        errors
       });
     }
 
@@ -176,13 +176,13 @@ exports.updateCategory = async (req, res) => {
       { ...req.body, updatedAt: Date.now() },
       { new: true, runValidators: true }
     ).populate('parentCategory', 'name')
-     .populate('subCategories', 'name');
+      .populate('subCategories', 'name');
 
     if (!category) {
       return res.status(404).json({
         success: false,
-        errors: ['Category not found'],
-        data: null
+        data: null,
+        errors: ['Category not found']
       });
     }
 
@@ -194,8 +194,8 @@ exports.updateCategory = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
@@ -203,28 +203,28 @@ exports.updateCategory = async (req, res) => {
 exports.deleteCategory = async (req, res) => {
   try {
     // Check if category has products
-    const productsCount = await Product.countDocuments({ 
-      category: req.params.id 
+    const productsCount = await Product.countDocuments({
+      category: req.params.id
     });
 
     if (productsCount > 0) {
       return res.status(400).json({
         success: false,
-        errors: ['Cannot delete category with existing products'],
-        data: null
+        data: null,
+        errors: ['Cannot delete category with existing products']
       });
     }
 
     // Check if category has subcategories
-    const hasSubcategories = await Category.exists({ 
-      parentCategory: req.params.id 
+    const hasSubcategories = await Category.exists({
+      parentCategory: req.params.id
     });
 
     if (hasSubcategories) {
       return res.status(400).json({
         success: false,
-        errors: ['Cannot delete category with existing subcategories'],
-        data: null
+        data: null,
+        errors: ['Cannot delete category with existing subcategories']
       });
     }
 
@@ -233,8 +233,8 @@ exports.deleteCategory = async (req, res) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        errors: ['Category not found'],
-        data: null
+        data: null,
+        errors: ['Category not found']
       });
     }
 
@@ -248,14 +248,14 @@ exports.deleteCategory = async (req, res) => {
 
     res.json({
       success: true,
-      errors: [],
-      data: { message: 'Category deleted successfully' }
+      data: { message: 'Category deleted successfully' },
+      errors: []
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
@@ -292,8 +292,8 @@ exports.getCategoryProducts = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
@@ -311,21 +311,21 @@ exports.updateCategoryStatus = async (req, res) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        errors: ['Category not found'],
-        data: null
+        data: null,
+        errors: ['Category not found']
       });
     }
 
     res.json({
       success: true,
-      errors: [],
-      data: { category }
+      data: { category },
+      errors: []
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
@@ -337,8 +337,8 @@ exports.reorderCategories = async (req, res) => {
     if (!Array.isArray(orders)) {
       return res.status(400).json({
         success: false,
-        errors: ['Invalid input format'],
-        data: null
+        data: null,
+        errors: ['Invalid input format']
       });
     }
 
@@ -350,14 +350,14 @@ exports.reorderCategories = async (req, res) => {
 
     res.json({
       success: true,
-      errors: [],
-      data: { message: 'Categories reordered successfully' }
+      data: { message: 'Categories reordered successfully' },
+      errors: []
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      errors: [err.message],
-      data: null
+      data: null,
+      errors: [err.message]
     });
   }
 };
