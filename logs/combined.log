@@ -1,0 +1,10 @@
+{"level":"info","message":{"duration":"25ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:44:44.431Z"}
+{"level":"info","message":{"duration":"870ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:49:16.908Z"}
+{"level":"info","message":{"duration":"795ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:49:19.024Z"}
+{"level":"info","message":{"duration":"801ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:49:21.137Z"}
+{"level":"info","message":{"duration":"778ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:49:23.215Z"}
+{"level":"info","message":{"duration":"767ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:49:25.560Z"}
+{"level":"info","message":{"duration":"4ms","ip":"::ffff:127.0.0.1","method":"POST","status":429,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:49:26.558Z"}
+{"level":"info","message":{"duration":"982ms","ip":"::ffff:127.0.0.1","method":"POST","status":200,"url":"/login","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:50:49.470Z"}
+{"level":"info","message":{"duration":"22ms","ip":"::ffff:127.0.0.1","method":"GET","status":200,"url":"/","userAgent":"insomnia/10.2.0"},"timestamp":"2024-12-16T11:53:39.642Z"}
+{"level":"info","message":{"duration":"31ms","ip":"::ffff:127.0.0.1","method":"GET","status":404,"url":"/api/health"},"timestamp":"2024-12-16T12:04:37.066Z"}
