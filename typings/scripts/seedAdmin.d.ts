@@ -4,9 +4,11 @@ declare interface adminUserType {
 
 	static email: string;
 
-	static password: any;
+	static password: string;
 
-	static userType: any;
+	static userType: string;
+
+	static status: string;
 
 	static profile: {
 	static firstName: string;

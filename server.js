@@ -7,7 +7,9 @@ const compression = require('compression');
 // const connectDB = require('./src/config/db');
 const { requestLogger } = require('./src/middleware/logger');
 const errorHandler = require('./src/middleware/errorHandler');
+const paginateResults = require('./src/middleware/pagination');
 const { apiLimiter } = require('./src/middleware/rateLimiter');
+const swagger = require('./src/config/swagger');
 const app = express();
 
 // Connect Database
@@ -21,9 +23,12 @@ app.use(compression()); // Compress responses
 app.use(express.json({ limit: '10mb' })); // Body parser with size limit
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger); // Request logging
+app.use(paginateResults);
+
+app.use('/api-docs', swagger.serve, swagger.setup);
 
 // Rate limiting
-app.use('/api/', apiLimiter);
+app.use('/api/v1/', apiLimiter);
 
 // Define Routes
 app.use('/api/v1/auth', require('./src/routes/auth'));
@@ -32,7 +37,7 @@ app.use('/api/v1/categories', require('./src/routes/categories'));
 app.use('/api/v1/shops', require('./src/routes/shops'));
 app.use('/api/v1/upload', require('./src/routes/upload'));
 app.use('/api/v1/health', require('./src/routes/health'));
-
+app.use('/api/v1/users', require('./src/routes/userManagement'));
 // Error handling
 app.use(errorHandler);
 

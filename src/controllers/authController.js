@@ -1,5 +1,5 @@
 require('dotenv').config();
-const User = require('../models/User');
+const {User} = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { uploadToCloudinary } = require('../config/cloudinary');
