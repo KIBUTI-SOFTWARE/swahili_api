@@ -9,6 +9,8 @@ const { requestLogger } = require('./src/middleware/logger');
 const errorHandler = require('./src/middleware/errorHandler');
 const paginateResults = require('./src/middleware/pagination');
 const { apiLimiter } = require('./src/middleware/rateLimiter');
+const securityMiddleware = require('./src/middleware/security');
+
 const swagger = require('./src/config/swagger');
 const app = express();
 
@@ -24,6 +26,7 @@ app.use(express.json({ limit: '10mb' })); // Body parser with size limit
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger); // Request logging
 app.use(paginateResults);
+app.use(securityMiddleware);
 
 app.use('/api-docs', swagger.serve, swagger.setup);
 

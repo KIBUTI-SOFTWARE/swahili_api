@@ -10,6 +10,118 @@ const shopImageUpload = upload.fields([
   { name: 'coverImage', maxCount: 1 }
 ]);
 
+/**
+ * @swagger
+ * /api/v1/shops/own:
+ *   get:
+ *     tags:
+ *       - Shops
+ *     summary: Get authenticated user's shop
+ *     description: Retrieve the shop owned by the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Shop details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: []
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     shop:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                           example: "60d5ecb8b5c9c62b3c7c1b5e"
+ *                         name:
+ *                           type: string
+ *                           example: "My Shop"
+ *                         description:
+ *                           type: string
+ *                           example: "A great shop with amazing products"
+ *                         logo:
+ *                           type: string
+ *                           example: "https://example.com/logo.jpg"
+ *                         coverImage:
+ *                           type: string
+ *                           example: "https://example.com/cover.jpg"
+ *                         status:
+ *                           type: string
+ *                           enum: [pending, active, suspended, closed]
+ *                           example: "active"
+ *                         address:
+ *                           type: object
+ *                           properties:
+ *                             street:
+ *                               type: string
+ *                             city:
+ *                               type: string
+ *                             state:
+ *                               type: string
+ *                             country:
+ *                               type: string
+ *                             zipCode:
+ *                               type: string
+ *                             coordinates:
+ *                               type: object
+ *                               properties:
+ *                                 lat:
+ *                                   type: number
+ *                                 lng:
+ *                                   type: number
+ *                         contactInfo:
+ *                           type: object
+ *                           properties:
+ *                             email:
+ *                               type: string
+ *                             phone:
+ *                               type: string
+ *                             website:
+ *                               type: string
+ *                             socialMedia:
+ *                               type: object
+ *                               properties:
+ *                                 facebook:
+ *                                   type: string
+ *                                 instagram:
+ *                                   type: string
+ *                                 twitter:
+ *                                   type: string
+ *                         categories:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                               name:
+ *                                 type: string
+ *                         createdAt:
+ *                           type: string
+ *                           format: date-time
+ *                         updatedAt:
+ *                           type: string
+ *                           format: date-time
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: Shop not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/own', auth, shopController.getUserShop);
 
 /**
  * @swagger
@@ -229,6 +341,8 @@ router.get('/:id', shopController.getShopById);
  *         description: Shop not found
  */
 router.get('/:id/products', shopController.getShopProducts);
+
+
 
 // Seller routes
 router.post('/', 

@@ -60,7 +60,7 @@ const CategorySchema = new mongoose.Schema({
     name: String,
     type: {
       type: String,
-      enum: ['text', 'number', 'boolean', 'select'],
+      enum: ['text', 'number', 'boolean', 'select','date'],
       default: 'text'
     },
     required: {

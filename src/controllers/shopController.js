@@ -134,6 +134,34 @@ exports.getAllShops = async (req, res) => {
   }
 };
 
+exports.getUserShop = async (req, res) => {
+  try {
+      const shop = await Shop.findOne({ owner: req.user.id })
+          .populate('categories', 'name');
+
+      if (!shop) {
+          return res.status(404).json({
+              success: false,
+              errors: ['No shop found for this user'],
+              data: null
+          });
+      }
+
+      return res.json({
+          success: true,
+          errors: [],
+          data: { shop }
+      });
+  } catch (error) {
+      console.error('Get user shop error:', error);
+      return res.status(500).json({
+          success: false,
+          errors: [error.message],
+          data: null
+      });
+  }
+};
+
 exports.getShopById = async (req, res) => {
   try {
     const shop = await Shop.findById(req.params.id)
