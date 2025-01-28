@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server'); // You'll need to export app from server.js
+const app = require('../server'); 
 
 describe('Health Check API', () => {
   it('should return health status', async () => {

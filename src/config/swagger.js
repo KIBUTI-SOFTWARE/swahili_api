@@ -10,15 +10,19 @@ const options = {
       description: 'API documentation for Swahili family Marketplace App',
       contact: {
         name: 'API Support',
-        email: 'support@swahili.com'
+        email: 'headricleonard@gmail.com'
       }
     },
     servers: [
       {
         url: process.env.API_URL || 'http://localhost:5000',
         description: 'Development server'
+      },
+      {
+        url: 'https://swahili-api.onrender.com',
+        description: 'Production server'
       }
-    ],
+    ],    
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -70,12 +74,13 @@ const options = {
       }
     }
   },
-  apis: ['./src/routes/*.js'] // Path to the API routes
+  apis: ['./src/routes/*.js'] 
 };
 
 const specs = swaggerJsdoc(options);
 
 module.exports = {
   serve: swaggerUi.serve,
-  setup: swaggerUi.setup(specs)
+  setup: swaggerUi.setup(specs),
+  swaggerSpec: specs, 
 };

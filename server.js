@@ -22,7 +22,7 @@ app.use(express.json({ extended: false }));
 app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS
 app.use(compression()); // Compress responses
-app.use(express.json({ limit: '10mb' })); // Body parser with size limit
+app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger); // Request logging
 app.use(paginateResults);
@@ -43,6 +43,13 @@ app.use('/api/v1/health', require('./src/routes/health'));
 app.use('/api/v1/users', require('./src/routes/userManagement'));
 // Error handling
 app.use(errorHandler);
+
+// Serve Swagger JSON
+app.get('/swagger.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=swagger.json');
+    res.send(swagger.swaggerSpec);
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -65,4 +72,4 @@ process.on('unhandledRejection', (err) => {
 });
 
 
-module.exports=app
+module.exports = app
