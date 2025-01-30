@@ -10,9 +10,9 @@ const validateShopInput = (data) => {
   if (!data.description) errors.push('Description is required');
   if (!data.address?.street) errors.push('Street address is required');
   if (!data.address?.city) errors.push('City is required');
-  if (!data.address?.state) errors.push('State is required');
+  // if (!data.address?.state) errors.push('State is required');
   if (!data.address?.country) errors.push('Country is required');
-  if (!data.address?.zipCode) errors.push('Zip code is required');
+  // if (!data.address?.zipCode) errors.push('Zip code is required');
   if (!data.contactInfo?.email) errors.push('Contact email is required');
   if (!data.contactInfo?.phone) errors.push('Contact phone is required');
 

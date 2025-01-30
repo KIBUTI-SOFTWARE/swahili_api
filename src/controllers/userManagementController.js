@@ -187,3 +187,43 @@ exports.updateUserProfile = async (req, res) => {
     });
   }
 };
+
+exports.getLoginAttempts = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('username email loginAttempts');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        errors: ['User not found'],
+        data: null
+      });
+    }
+
+    const isLocked = user.isAccountLocked();
+    
+    res.json({
+      success: true,
+      errors: [],
+      data: {
+        username: user.username,
+        email: user.email,
+        loginAttempts: {
+          count: user.loginAttempts.count,
+          lastAttempt: user.loginAttempts.lastAttempt,
+          lockUntil: user.loginAttempts.lockUntil,
+          isCurrentlyLocked: isLocked,
+          timeRemaining: isLocked ? 
+            Math.ceil((user.loginAttempts.lockUntil - Date.now()) / 1000 / 60) : 0 // remaining minutes
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      errors: [error.message],
+      data: null
+    });
+  }
+};

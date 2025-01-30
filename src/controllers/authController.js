@@ -129,6 +129,84 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+// exports.loginUser = [
+//   loginLimiter,
+//   async (req, res) => {
+//     const { email, password } = req.body;
+//     const errors = [];
+
+//     // Validation
+//     if (!email) errors.push('Email is required');
+//     if (!password) errors.push('Password is required');
+
+//     if (errors.length > 0) {
+//       return res.status(400).json({
+//         success: false,
+//         errors: errors,
+//         data: null
+//       });
+//     }
+
+//     try {
+//       // Check if user exists
+//       const user = await User.findOne({ email });
+//       if (!user) {
+//         return res.status(400).json({
+//           success: false,
+//           errors: ['Invalid credentials'],
+//           data: null
+//         });
+//       }
+
+//       // Compare passwords
+//       const isMatch = await bcrypt.compare(password, user.password);
+//       if (!isMatch) {
+//         return res.status(400).json({
+//           success: false,
+//           errors: ['Invalid credentials'],
+//           data: null
+//         });
+//       }
+
+//       // Generate tokens
+//       const accessToken = generateAccessToken(user);
+//       const refreshToken = generateRefreshToken(user);
+
+//       // Save refresh token to user
+//       user.refreshToken = refreshToken;
+//       await user.save();
+
+//       res.json({
+//         success: true,
+//         data: {
+//           user: {
+//             id: user._id,
+//             username: user.username,
+//             email: user.email,
+//             userType: user.userType,
+//             profile: {
+//               avatar: user.profile.avatar || null
+//             }
+//           },
+//           tokens: {
+//             access: accessToken,
+//             refresh: refreshToken
+//           }
+//         },
+//         errors: []
+//       });
+//     } catch (err) {
+//       res.status(500).json({
+//         success: false,
+//         errors: [err.message],
+//         data: null
+//       });
+//     }
+//   }
+// ];
+
+// Refresh Token Endpoint
+
 exports.loginUser = [
   loginLimiter,
   async (req, res) => {
@@ -158,15 +236,34 @@ exports.loginUser = [
         });
       }
 
+      // Check if account is locked
+      if (user.isAccountLocked()) {
+        return res.status(403).json({
+          success: false,
+          errors: ['Account is temporarily locked due to too many failed attempts. Please try again later.'],
+          data: null
+        });
+      }
+
       // Compare passwords
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
+        // Increment login attempts on failed login
+        await user.incrementLoginAttempts();
+        
         return res.status(400).json({
           success: false,
           errors: ['Invalid credentials'],
           data: null
         });
       }
+
+      // Reset login attempts on successful login
+      await user.resetLoginAttempts();
+
+      // Update last login
+      user.lastLogin = new Date();
+      await user.save();
 
       // Generate tokens
       const accessToken = generateAccessToken(user);
@@ -205,7 +302,6 @@ exports.loginUser = [
   }
 ];
 
-// Refresh Token Endpoint
 exports.refreshToken = async (req, res) => {
   const { refreshToken } = req.body;
 

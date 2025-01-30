@@ -307,6 +307,148 @@ router.delete('/:id/roles/:roleId',
   userManagementController.removeRole
 );
 
+/**
+ * @swagger
+ * /api/v1/users/{id}/login-attempts:
+ *   get:
+ *     tags:
+ *       - User Management
+ *     summary: Get user login attempts history
+ *     description: Retrieve the login attempts history for a specific user (Admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: Login attempts information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: []
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                       example: "john_doe"
+ *                     email:
+ *                       type: string
+ *                       example: "john@example.com"
+ *                     loginAttempts:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: number
+ *                           description: Number of failed login attempts
+ *                           example: 3
+ *                         lastAttempt:
+ *                           type: string
+ *                           format: date-time
+ *                           description: Timestamp of the last failed attempt
+ *                           example: "2024-01-20T15:30:00.000Z"
+ *                         lockUntil:
+ *                           type: string
+ *                           format: date-time
+ *                           description: When the account lock expires (if locked)
+ *                           example: "2024-01-20T16:00:00.000Z"
+ *                         isCurrentlyLocked:
+ *                           type: boolean
+ *                           description: Whether the account is currently locked
+ *                           example: true
+ *                         timeRemaining:
+ *                           type: number
+ *                           description: Minutes remaining until lock expires (if locked)
+ *                           example: 25
+ *       401:
+ *         description: Unauthorized - Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Authentication required"]
+ *                 data:
+ *                   type: null
+ *       403:
+ *         description: Forbidden - Not authorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Insufficient permissions"]
+ *                 data:
+ *                   type: null
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["User not found"]
+ *                 data:
+ *                   type: null
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Internal server error"]
+ *                 data:
+ *                   type: null
+ */
+router.get('/:id/login-attempts',
+  auth,
+  checkPermission('users', 'manage'),
+  userManagementController.getLoginAttempts
+);
+
 // Update user profile
 // router.put('/:id/profile',
 //   auth,
