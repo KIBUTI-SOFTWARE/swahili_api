@@ -343,7 +343,6 @@ router.get('/:id', shopController.getShopById);
 router.get('/:id/products', shopController.getShopProducts);
 
 
-
 // Seller routes
 router.post('/', 
   auth, 

@@ -19,7 +19,7 @@ const options = {
         description: 'Development server'
       },
       {
-        url: 'https://swahili-api.onrender.com',
+        url: 'https://api.swahilifamily.com',
         description: 'Production server'
       }
     ],    

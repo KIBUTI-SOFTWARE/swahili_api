@@ -36,15 +36,15 @@ const ShopSchema = new mongoose.Schema({
     },
     state: {
       type: String,
-      required: true
+      required: false
     },
     country: {
       type: String,
-      required: true
+      required: false
     },
     zipCode: {
       type: String,
-      required: true
+      required: false
     },
     coordinates: {
       lat: Number,
