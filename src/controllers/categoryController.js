@@ -108,14 +108,34 @@ exports.getAllCategories = async (req, res) => {
       query.parentCategory = null;
     }
 
+    // Get categories
     const categories = await Category.find(query)
       .populate('parentCategory', 'name')
       .populate('subCategories', 'name')
       .sort(sort);
 
+    // Get product counts for each category
+    const categoriesWithCounts = await Promise.all(
+      categories.map(async (category) => {
+        const [productCount, activeProductCount] = await Promise.all([
+          Product.countDocuments({ category: category._id }),
+          Product.countDocuments({ category: category._id, isActive: true })
+        ]);
+        
+        const categoryObj = category.toObject();
+        return {
+          ...categoryObj,
+          metadata: {
+            productCount,
+            activeProductCount
+          }
+        };
+      })
+    );
+
     res.json({
       success: true,
-      data: { categories },
+      data: { categories: categoriesWithCounts },
       errors: []
     });
   } catch (err) {
@@ -141,9 +161,25 @@ exports.getCategoryById = async (req, res) => {
       });
     }
 
+    // Get both total and active product counts
+    const [productCount, activeProductCount] = await Promise.all([
+      Product.countDocuments({ category: category._id }),
+      Product.countDocuments({ category: category._id, isActive: true })
+    ]);
+
+    const categoryObj = category.toObject();
+    
     res.json({
       success: true,
-      data: { category },
+      data: { 
+        category: {
+          ...categoryObj,
+          metadata: {
+            productCount,
+            activeProductCount
+          }
+        }
+      },
       errors: []
     });
   } catch (err) {
