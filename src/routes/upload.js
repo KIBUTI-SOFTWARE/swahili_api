@@ -6,6 +6,13 @@ const upload = require('../middleware/upload');
 
 /**
  * @swagger
+ * tags:
+ *   name: Upload
+ *   description: image upload endpoints
+ */
+
+/**
+ * @swagger
  * /api/v1/upload/single:
  *   post:
  *     tags:

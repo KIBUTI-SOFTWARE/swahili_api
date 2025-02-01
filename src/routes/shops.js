@@ -12,6 +12,13 @@ const shopImageUpload = upload.fields([
 
 /**
  * @swagger
+ * tags:
+ *   name: Shops
+ *   description: Shops management endpoints
+ */
+
+/**
+ * @swagger
  * /api/v1/shops/own:
  *   get:
  *     tags:

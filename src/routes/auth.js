@@ -63,6 +63,14 @@ const { User } = require('../models/User');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: Authentication  endpoints
+ */
+
 /**
  * @swagger
  * /api/v1/auth/login/2fa:

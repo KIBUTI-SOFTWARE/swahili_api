@@ -41,6 +41,8 @@ app.use('/api/v1/shops', require('./src/routes/shops'));
 app.use('/api/v1/upload', require('./src/routes/upload'));
 app.use('/api/v1/health', require('./src/routes/health'));
 app.use('/api/v1/users', require('./src/routes/userManagement'));
+app.use('/api/v1/orders', require('./src/routes/orders'));
+
 // Error handling
 app.use(errorHandler);
 

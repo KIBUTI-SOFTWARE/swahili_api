@@ -4,6 +4,13 @@ const healthController = require('../controllers/healthController');
 
 /**
  * @swagger
+ * tags:
+ *   name: System
+ *   description: Check system health and status
+ */
+
+/**
+ * @swagger
  * /api/v1/health:
  *   get:
  *     tags:

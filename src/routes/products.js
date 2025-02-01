@@ -61,6 +61,12 @@ const auth = require('../middleware/auth');
  *           format: date-time
  */
 
+/**
+ * @swagger
+ * tags:
+ *   name: Products
+ *   description: Products management  endpoints
+ */
 
 /**
  * @swagger
