@@ -7,6 +7,12 @@ const twoFactorAuthController= require('../controllers/twoFactorAuthController')
 
 const upload = require('../middleware/upload');
 
+/**
+ * @swagger
+ * tags:
+ *   name: User Management
+ *   description: User management endpoints
+ */
 
 /**
  * @swagger
