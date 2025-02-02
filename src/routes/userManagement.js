@@ -455,6 +455,9 @@ router.get('/:id/login-attempts',
   userManagementController.getLoginAttempts
 );
 
+router.patch("/:userId/push-notification-token", auth, userManagementController.updatePushToken);
+
+
 // Update user profile
 // router.put('/:id/profile',
 //   auth,

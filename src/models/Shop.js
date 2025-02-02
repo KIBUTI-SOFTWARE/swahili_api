@@ -134,6 +134,13 @@ const ShopSchema = new mongoose.Schema({
   }
 });
 
+ShopSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
+
 // Update timestamp on save
 ShopSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
