@@ -44,6 +44,7 @@ app.use('/api/v1/users', require('./src/routes/userManagement'));
 app.use('/api/v1/orders', require('./src/routes/orders'));
 app.use('/api/v1/ratings', require('./src/routes/ratings'));
 app.use('/api/v1/chat', require('./src/routes/chat'));
+app.use('/api/v1/notifications', require('./src/routes/notifications'));
 // Error handling
 app.use(errorHandler);
 

@@ -42,9 +42,41 @@ const ProductSchema = new mongoose.Schema({
       default: 0
     }
   },
+  views: {
+    total: {
+      type: Number,
+      default: 0
+    },
+    unique: {
+      type: Number,
+      default: 0
+    },
+    history: [{
+      ip: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      },
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
+      }
+    }]
+  },
   createdAt: {
     type: Date,
     default: Date.now
+  }
+});
+
+ProductSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    if (ret.views) {
+      delete ret.views.history;
+    }
+    return ret;
   }
 });
 

@@ -227,3 +227,29 @@ exports.getLoginAttempts = async (req, res) => {
     });
   }
 };
+
+exports.updatePushToken = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Verify user owns this token
+    if (req.user._id.toString() !== userId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Validate token format
+    if (!/^ExponentPushToken\[.+\]$/.test(req.body.expoPushToken)) {
+      return res.status(400).json({ error: "Invalid token format" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: { expoPushToken: req.body.expoPushToken } },
+      { new: true, select: "expoPushToken" }
+    );
+
+    res.json({ success: true, token: updatedUser.expoPushToken });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -81,6 +81,7 @@ const CategorySchema = new mongoose.Schema({
   timestamps: true
 });
 
+
 // Create slug from name
 CategorySchema.pre('save', function(next) {
   if (this.isModified('name')) {
@@ -88,5 +89,13 @@ CategorySchema.pre('save', function(next) {
   }
   next();
 });
+
+CategorySchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
+
 
 module.exports = mongoose.model('Category', CategorySchema);

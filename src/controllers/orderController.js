@@ -1,7 +1,8 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const {User} = require('../models/User');
+const { User } = require('../models/User');
 const mongoose = require('mongoose');
+const notificationService = require('../services/notificationService');
 
 const ORDER_STATUS_FLOW = {
   pending: ['processing', 'cancelled'],
@@ -19,7 +20,7 @@ const isValidStatusTransition = (currentStatus, newStatus) => {
 exports.createOrder = async (req, res) => {
   try {
     const { productId, quantity, shippingAddress, paymentMethod } = req.body;
-    const userId = req.user._id; 
+    const userId = req.user._id;
 
     // Validate input
     if (!productId || !quantity || !shippingAddress || !paymentMethod) {
@@ -55,7 +56,7 @@ exports.createOrder = async (req, res) => {
     // Calculate total amount
     const subtotal = product.price * quantity;
     const tax = subtotal * 0.15; // Assuming 15% tax
-    const shippingCost = 10; 
+    const shippingCost = 10;
     const totalAmount = subtotal + tax + shippingCost;
 
     // Create order
@@ -97,6 +98,24 @@ exports.createOrder = async (req, res) => {
         userId,
         { $push: { orders: order._id } }
       );
+
+      // Create notification for shop owner
+      const notificationMessage = `New order #${order.orderNumber} for ${product.name}`;
+
+      // Create persistent notification
+      await notificationService.createPersistentNotification(
+        product.shop._id,
+        notificationMessage,
+        order._id
+      );
+
+      // Send Expo push notification if shop owner has token
+      if (product.shop.expoPushToken) {
+        await notificationService.sendPushNotification(
+          product.shop.expoPushToken,
+          notificationMessage
+        );
+      }
 
       // Fetch the complete order with populated fields for response
       const populatedOrder = await Order.findById(order._id)
@@ -305,8 +324,8 @@ exports.updateOrderStatus = async (req, res) => {
       statusUpdate,
       { new: true }
     ).populate('shop', 'name')
-     .populate('items.product', 'name image price')
-     .populate('statusHistory.updatedBy', 'username');
+      .populate('items.product', 'name image price')
+      .populate('statusHistory.updatedBy', 'username');
 
     // Send notification to user (you can implement this based on your notification system)
     // await notifyUser(order.user, `Your order status has been updated to ${status}`);

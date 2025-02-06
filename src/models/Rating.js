@@ -41,6 +41,13 @@ const ratingSchema = new mongoose.Schema({
   }
 });
 
+ratingSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
+
 // Ensure one rating per user per product
 ratingSchema.index({ user: 1, product: 1 }, { unique: true });
 

@@ -1,6 +1,26 @@
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 
+const isNewView = async (product, ip, userId) => {
+  // Check if this IP or user has viewed in the last 24 hours
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  
+  const existingView = await Product.findOne({
+    _id: product._id,
+    'views.history': {
+      $elemMatch: {
+        $or: [
+          { ip: ip },
+          { user: userId }
+        ],
+        timestamp: { $gte: twentyFourHoursAgo }
+      }
+    }
+  });
+
+  return !existingView;
+};
+
 exports.createProduct = async (req, res) => {
   try {
     // First check if the user has a shop
@@ -102,6 +122,22 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+// exports.getProductById = async (req, res) => {
+//   try {
+//     const product = await Product.findById(req.params.id)
+//       .populate('category', 'name')
+//       .populate('shop', 'name');
+    
+//     if (!product) {
+//       return res.status(404).json({ message: 'Product not found' });
+//     }
+    
+//     res.json(product);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -109,12 +145,42 @@ exports.getProductById = async (req, res) => {
       .populate('shop', 'name');
     
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({
+        success: false,
+        errors: ['Product not found'],
+        data: null
+      });
     }
+
+    // Track view
+    const ip = req.ip;
+    const userId = req.user ? req.user._id : null;
     
-    res.json(product);
+    // Increment total views
+    product.views.total += 1;
+
+    // Check if this is a new view (not from same IP/user in last 24h)
+    if (await isNewView(product, ip, userId)) {
+      product.views.unique += 1;
+      product.views.history.push({
+        ip: ip,
+        user: userId
+      });
+    }
+
+    await product.save();
+    
+    res.json({
+      success: true,
+      data: { product },
+      errors: []
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      success: false,
+      errors: [err.message],
+      data: null
+    });
   }
 };
 
@@ -147,5 +213,89 @@ exports.deleteProduct = async (req, res) => {
     res.json({ message: 'Product deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.trackProductView = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const ip = req.ip;
+    const userId = req.user ? req.user._id : null;
+
+    const product = await Product.findById(productId);
+    
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        errors: ['Product not found'],
+        data: null
+      });
+    }
+
+    // Increment total views
+    product.views.total += 1;
+
+    // Check if this is a new view
+    if (await isNewView(product, ip, userId)) {
+      product.views.unique += 1;
+      product.views.history.push({
+        ip: ip,
+        user: userId
+      });
+    }
+
+    await product.save();
+
+    res.json({
+      success: true,
+      data: {
+        views: {
+          total: product.views.total,
+          unique: product.views.unique
+        }
+      },
+      errors: []
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      errors: [err.message],
+      data: null
+    });
+  }
+};
+
+exports.getProductViewStats = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await Product.findById(productId)
+      .select('views.total views.unique');
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        errors: ['Product not found'],
+        data: null
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        views: {
+          total: product.views.total,
+          unique: product.views.unique
+        }
+      },
+      errors: []
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      errors: [err.message],
+      data: null
+    });
   }
 };

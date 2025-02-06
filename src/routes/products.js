@@ -261,4 +261,85 @@ router.put('/:id', auth, productController.updateProduct);
 // Delete a product (protected route)
 router.delete('/:id', auth, productController.deleteProduct);
 
+
+/**
+ * @swagger
+ * /api/v1/products/{id}/view:
+ *   post:
+ *     tags:
+ *       - Products
+ *     summary: Track product view
+ *     description: Record a new view for the product
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: View tracked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     views:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: number
+ *                         unique:
+ *                           type: number
+ *       404:
+ *         description: Product not found
+ */
+router.post('/:productId/view', productController.trackProductView);
+
+/**
+ * @swagger
+ * /api/v1/products/{id}/views:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Get product view statistics
+ *     description: Get total and unique views for a product
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: View statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     views:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: number
+ *                         unique:
+ *                           type: number
+ *       404:
+ *         description: Product not found
+ */
+router.get('/:productId/views', productController.getProductViewStats);
+
 module.exports = router;

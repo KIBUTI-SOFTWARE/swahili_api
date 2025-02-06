@@ -86,6 +86,13 @@ const orderSchema = new mongoose.Schema({
   }
 });
 
+orderSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
+
 // Generate order number before saving
 orderSchema.pre('save', function(next) {
   if (!this.orderNumber) {

@@ -26,8 +26,28 @@ const roleSchema = new mongoose.Schema({
   }
 });
 
+const notificationSettingsSchema = new mongoose.Schema({
+  email: { 
+    type: Boolean,
+    default: true
+  },
+  push: {
+    type: Boolean, 
+    default: true
+  },
+  sms: {
+    type: Boolean,
+    default: false
+  },
+  // Add channel-specific settings if needed
+  channels: {
+    orderUpdates: Boolean,
+    promotions: Boolean,
+    systemAlerts: Boolean
+  }
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
-  // Existing fields
   username: {
     type: String,
     required: true,
@@ -47,8 +67,6 @@ const userSchema = new mongoose.Schema({
     enum: ['ADMIN', 'SELLER', 'BUYER', 'MODERATOR', 'SUPPORT'],
     required: true
   },
-  
-  // New fields
   roles: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Role'
@@ -91,10 +109,19 @@ const userSchema = new mongoose.Schema({
     },
     timezone: String
   },
+  expoPushToken: String,
   notifications: {
-    email: { type: Boolean, default: true },
-    push: { type: Boolean, default: true },
-    sms: { type: Boolean, default: false }
+    type: [notificationSettingsSchema],
+    default: [{
+      email: true,
+      push: true,
+      sms: false,
+      channels: {
+        orderUpdates: true,
+        promotions: true,
+        systemAlerts: true
+      }
+    }]
   },
   metadata: {
     lastPasswordReset: Date,
@@ -113,7 +140,7 @@ const userSchema = new mongoose.Schema({
 const Role = mongoose.model('Role', roleSchema);
 
 // Add methods to user schema
-userSchema.methods.hasPermission = function(resource, action) {
+userSchema.methods.hasPermission = function (resource, action) {
   // Check custom permissions
   const customPermission = this.customPermissions.find(p => p.resource === resource);
   if (customPermission && customPermission.actions.includes(action)) {
@@ -121,18 +148,18 @@ userSchema.methods.hasPermission = function(resource, action) {
   }
 
   // Check role-based permissions
-  return this.roles.some(role => 
-    role.permissions.some(p => 
+  return this.roles.some(role =>
+    role.permissions.some(p =>
       p.resource === resource && p.actions.includes(action)
     )
   );
 };
 
-userSchema.methods.isAccountLocked = function() {
+userSchema.methods.isAccountLocked = function () {
   return this.loginAttempts.lockUntil && this.loginAttempts.lockUntil > Date.now();
 };
 
-userSchema.methods.incrementLoginAttempts = async function() {
+userSchema.methods.incrementLoginAttempts = async function () {
   const lockTime = 30 * 60 * 1000; // 30 minutes
   const maxAttempts = 5;
 
@@ -146,7 +173,7 @@ userSchema.methods.incrementLoginAttempts = async function() {
   await this.save();
 };
 
-userSchema.methods.resetLoginAttempts = async function() {
+userSchema.methods.resetLoginAttempts = async function () {
   this.loginAttempts = {
     count: 0,
     lastAttempt: null,
