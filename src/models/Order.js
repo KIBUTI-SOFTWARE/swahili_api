@@ -47,13 +47,22 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['credit_card', 'debit_card', 'paypal', 'stripe'],
+    enum: ['credit_card', 'debit_card', 'mobile_money'],
     required: true
   },
   paymentStatus: {
     type: String,
     enum: ['pending', 'paid', 'failed'],
     default: 'pending'
+  },
+  paymentDetails: {
+    transactionId: String,
+    provider: String,
+    status: String,
+    lastUpdated: {
+      type: Date,
+      default: Date.now
+    }
   },
   status: {
     type: String,

@@ -1,7 +1,9 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { User } = require('../models/User');
+const { User } = require('../models/User');
 const mongoose = require('mongoose');
+const paymentService = require('../services/paymentService');
 const notificationService = require('../services/notificationService');
 
 const ORDER_STATUS_FLOW = {
@@ -20,6 +22,7 @@ const isValidStatusTransition = (currentStatus, newStatus) => {
 exports.createOrder = async (req, res) => {
   try {
     const { productId, quantity, shippingAddress, paymentMethod } = req.body;
+    const userId = req.user._id;
     const userId = req.user._id;
 
     // Validate input
@@ -56,6 +59,7 @@ exports.createOrder = async (req, res) => {
     // Calculate total amount
     const subtotal = product.price * quantity;
     const tax = subtotal * 0.15; // Assuming 15% tax
+    const shippingCost = 0;
     const shippingCost = 10;
     const totalAmount = subtotal + tax + shippingCost;
 
@@ -83,6 +87,27 @@ exports.createOrder = async (req, res) => {
     try {
       // Save order
       await order.save();
+
+      // Process payment if mobile money is selected
+      if (paymentMethod === 'mobile_money') {
+        const user = await User.findById(userId);
+        const paymentResult = await paymentService.processPayment({
+          amounts: order.amounts,
+          user: {
+            name: user.name,
+            email: user.email
+          },
+          shippingAddress
+        });
+
+        // Update order with payment information
+        order.paymentDetails = {
+          transactionId: paymentResult.transactionId,
+          provider: 'zenopay',
+          status: paymentResult.status
+        };
+        await order.save();
+      }
 
       // Update product stock and add order reference
       await Product.findByIdAndUpdate(
@@ -324,6 +349,8 @@ exports.updateOrderStatus = async (req, res) => {
       statusUpdate,
       { new: true }
     ).populate('shop', 'name')
+      .populate('items.product', 'name image price')
+      .populate('statusHistory.updatedBy', 'username');
       .populate('items.product', 'name image price')
       .populate('statusHistory.updatedBy', 'username');
 
