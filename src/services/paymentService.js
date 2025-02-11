@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { default: ZenoPay } = require('zenopay');
 
 class PaymentService {
@@ -16,11 +17,15 @@ class PaymentService {
         customerName: orderDetails.user.name,
         customerEmail: orderDetails.user.email,
         customerPhoneNumber: orderDetails.shippingAddress.phone,
+        callbackURL: process.env.ZENOPAY_CALLBACK_URL,
       };
-
+      console.log("paymentOptions", paymentOptions);
+      console.log("accountID:", this.zenoPay.accountID);
+      console.log("API_Key:", this.zenoPay.apiKey);
       const result = await this.zenoPay.Pay(paymentOptions);
       return result;
     } catch (error) {
+      console.log("An error occured while making payment:",error)
       throw new Error(`Payment processing failed: ${error.message}`);
     }
   }
@@ -33,6 +38,7 @@ class PaymentService {
       throw new Error(`Payment status check failed: ${error.message}`);
     }
   }
+  
 }
 
 module.exports = new PaymentService();
