@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { User } = require('../models/User');
 const mongoose = require('mongoose');
+const paymentService = require('../services/paymentService');
 const notificationService = require('../services/notificationService');
 
 const ORDER_STATUS_FLOW = {
@@ -16,6 +17,178 @@ const isValidStatusTransition = (currentStatus, newStatus) => {
   const allowedTransitions = ORDER_STATUS_FLOW[currentStatus] || [];
   return allowedTransitions.includes(newStatus);
 };
+
+// exports.createOrder = async (req, res) => {
+//   try {
+//     const { productId, quantity, shippingAddress, paymentMethod } = req.body;
+//     const userId = req.user._id;
+
+//     // Validate input
+//     if (!productId || !quantity || !shippingAddress || !paymentMethod) {
+//       return res.status(400).json({
+//         success: false,
+//         data: null,
+//         errors: ['Missing required fields']
+//       });
+//     }
+
+//     // Find prodct and check availability
+//     const product = await Product.findById(productId)
+//       .populate('shop', 'name email')
+//       .populate('category', 'name');
+
+//     if (!product) {
+//       return res.status(404).json({
+//         success: false,
+//         data: null,
+//         errors: ['Product not found']
+//       });
+//     }
+
+//     // Check stock availability
+//     if (product.stock < quantity) {
+//       return res.status(400).json({
+//         success: false,
+//         data: null,
+//         errors: [`Only ${product.stock} items available in stock`]
+//       });
+//     }
+
+//     // Calculate total amount
+//     const subtotal = product.price * quantity;
+//     const tax = subtotal * 0.15; // Assuming 15% tax
+//     const shippingCost = 0;
+//     // const shippingCost = 10;
+//     const totalAmount = subtotal + tax + shippingCost;
+
+//     // Create order
+//     const order = new Order({
+//       user: userId,
+//       shop: product.shop._id,
+//       items: [{
+//         product: productId,
+//         quantity,
+//         price: product.price,
+//         name: product.name
+//       }],
+//       shippingAddress,
+//       paymentMethod,
+//       amounts: {
+//         subtotal,
+//         tax,
+//         shipping: shippingCost,
+//         total: totalAmount
+//       },
+//       status: 'pending'
+//     });
+
+//     try {
+//       // Save order
+//       await order.save();
+
+//       // Process payment if mobile money is selected
+//       if (paymentMethod === 'mobile_money') {
+//         const user = await User.findById(userId);
+//         const paymentResult = await paymentService.processPayment({
+//           amounts: order.amounts,
+//           user: {
+//             name: user.username,
+//             email: user.email
+//           },
+//           shippingAddress
+//         });
+
+//         console.log("payment results:",paymentResult)
+
+//         // Update order with payment information
+//         order.paymentDetails = {
+//           transactionId: paymentResult.transactionId,
+//           provider: 'zenopay',
+//           status: paymentResult.status
+//         };
+//         await order.save();
+//       }
+
+//       // Update product stock and add order reference
+//       await Product.findByIdAndUpdate(
+//         productId,
+//         {
+//           $inc: { stock: -quantity },
+//           $push: { orders: order._id }
+//         }
+//       );
+
+//       // Update user's orders
+//       await User.findByIdAndUpdate(
+//         userId,
+//         { $push: { orders: order._id } }
+//       );
+
+//       // Create notification for shop owner
+//       const notificationMessage = `New order #${order.orderNumber} for ${product.name}`;
+
+//       // Create persistent notification
+//       await notificationService.createPersistentNotification(
+//         product.shop._id,
+//         notificationMessage,
+//         order._id
+//       );
+
+//       // Send Expo push notification if shop owner has token
+//       if (product.shop.expoPushToken) {
+//         await notificationService.sendPushNotification(
+//           product.shop.expoPushToken,
+//           notificationMessage
+//         );
+//       }
+
+//       // Fetch the complete order with populated fields for response
+//       const populatedOrder = await Order.findById(order._id)
+//         .populate('shop', 'name')
+//         .populate('items.product', 'name image price');
+
+//       res.status(201).json({
+//         success: true,
+//         data: {
+//           order: {
+//             _id: populatedOrder._id,
+//             orderNumber: populatedOrder.orderNumber,
+//             status: populatedOrder.status,
+//             amounts: populatedOrder.amounts,
+//             items: populatedOrder.items.map(item => ({
+//               product: {
+//                 _id: item.product._id,
+//                 name: item.product.name,
+//                 image: item.product.image
+//               },
+//               quantity: item.quantity,
+//               price: item.price
+//             })),
+//             shippingAddress: populatedOrder.shippingAddress,
+//             paymentMethod: populatedOrder.paymentMethod,
+//             createdAt: populatedOrder.createdAt
+//           }
+//         },
+//         errors: []
+//       });
+
+//     } catch (error) {
+//       // If there's an error,rollback the order
+//       if (order._id) {
+//         await Order.findByIdAndDelete(order._id);
+//       }
+//       throw error;
+//     }
+
+//   } catch (err) {
+//     res.status(500).json({
+//       success: false,
+//       data: null,
+//       errors: [err.message]
+//     });
+//   }
+// };
+
 
 exports.createOrder = async (req, res) => {
   try {
@@ -33,11 +206,11 @@ exports.createOrder = async (req, res) => {
 
     // Find product and check availability
     const product = await Product.findById(productId)
-      .populate('shop', 'name email')
+      .populate('shop', 'name email expoPushToken')
       .populate('category', 'name');
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         data: null,
         errors: ['Product not found']
@@ -55,12 +228,12 @@ exports.createOrder = async (req, res) => {
 
     // Calculate total amount
     const subtotal = product.price * quantity;
-    const tax = subtotal * 0.15; // Assuming 15% tax
-    const shippingCost = 10;
+    const tax = subtotal * 0.15;
+    const shippingCost = 0;
     const totalAmount = subtotal + tax + shippingCost;
 
-    // Create order
-    const order = new Order({
+    // Prepare order data
+    const orderData = {
       user: userId,
       shop: product.shop._id,
       items: [{
@@ -78,82 +251,103 @@ exports.createOrder = async (req, res) => {
         total: totalAmount
       },
       status: 'pending'
-    });
+    };
 
-    try {
-      // Save order
-      await order.save();
-
-      // Update product stock and add order reference
-      await Product.findByIdAndUpdate(
-        productId,
-        {
-          $inc: { stock: -quantity },
-          $push: { orders: order._id }
-        }
-      );
-
-      // Update user's orders
-      await User.findByIdAndUpdate(
-        userId,
-        { $push: { orders: order._id } }
-      );
-
-      // Create notification for shop owner
-      const notificationMessage = `New order #${order.orderNumber} for ${product.name}`;
-
-      // Create persistent notification
-      await notificationService.createPersistentNotification(
-        product.shop._id,
-        notificationMessage,
-        order._id
-      );
-
-      // Send Expo push notification if shop owner has token
-      if (product.shop.expoPushToken) {
-        await notificationService.sendPushNotification(
-          product.shop.expoPushToken,
-          notificationMessage
-        );
-      }
-
-      // Fetch the complete order with populated fields for response
-      const populatedOrder = await Order.findById(order._id)
-        .populate('shop', 'name')
-        .populate('items.product', 'name image price');
-
-      res.status(201).json({
-        success: true,
-        data: {
-          order: {
-            _id: populatedOrder._id,
-            orderNumber: populatedOrder.orderNumber,
-            status: populatedOrder.status,
-            amounts: populatedOrder.amounts,
-            items: populatedOrder.items.map(item => ({
-              product: {
-                _id: item.product._id,
-                name: item.product.name,
-                image: item.product.image
-              },
-              quantity: item.quantity,
-              price: item.price
-            })),
-            shippingAddress: populatedOrder.shippingAddress,
-            paymentMethod: populatedOrder.paymentMethod,
-            createdAt: populatedOrder.createdAt
-          }
+    // Process payment first if mobile money is selected
+    if (paymentMethod === 'mobile_money') {
+      const user = await User.findById(userId);
+      const paymentResult = await paymentService.processPayment({
+        amounts: orderData.amounts,
+        user: {
+          name: user.username,
+          email: user.email
         },
-        errors: []
+        shippingAddress
       });
 
-    } catch (error) {
-      // If there's an error, try to rollback the order
-      if (order._id) {
-        await Order.findByIdAndDelete(order._id);
+      if (!paymentResult.success || paymentResult.message.status !== 'success') {
+        return res.status(400).json({
+          success: false,
+          data: null,
+          errors: ['Payment processing failed']
+        });
       }
-      throw error;
+
+      // Add payment details to order data
+      orderData.paymentDetails = {
+        transactionId: paymentResult.message.order_id,
+        provider: 'zenopay',
+        status: paymentResult.message.status,
+        message: paymentResult.message.message
+      };
     }
+
+    // Create and save order after successful payment
+    const order = new Order(orderData);
+    await order.save();
+
+    // Update product stock and add order reference
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $inc: { stock: -quantity },
+        $push: { orders: order._id }
+      }
+    );
+
+    // Update user's orders
+    await User.findByIdAndUpdate(
+      userId,
+      { $push: { orders: order._id } }
+    );
+
+    // Create notification for shop owner
+    const notificationMessage = `New order #${order.orderNumber} for ${product.name}`;
+
+    // Create persistent notification
+    await notificationService.createPersistentNotification(
+      product.shop._id,
+      notificationMessage,
+      order._id
+    );
+
+    // Send Expo push notification if shop owner has token
+    if (product.shop.expoPushToken) {
+      await notificationService.sendPushNotification(
+        product.shop.expoPushToken,
+        notificationMessage
+      );
+    }
+
+    // Fetch the complete order with populated fields for response
+    const populatedOrder = await Order.findById(order._id)
+      .populate('shop', 'name')
+      .populate('items.product', 'name image price');
+
+    res.status(201).json({
+      success: true,
+      data: {
+        order: {
+          _id: populatedOrder._id,
+          orderNumber: populatedOrder.orderNumber,
+          status: populatedOrder.status,
+          amounts: populatedOrder.amounts,
+          items: populatedOrder.items.map(item => ({
+            product: {
+              _id: item.product._id,
+              name: item.product.name,
+              image: item.product.image
+            },
+            quantity: item.quantity,
+            price: item.price
+          })),
+          shippingAddress: populatedOrder.shippingAddress,
+          paymentMethod: populatedOrder.paymentMethod,
+          createdAt: populatedOrder.createdAt
+        }
+      },
+      errors: []
+    });
 
   } catch (err) {
     res.status(500).json({
@@ -163,6 +357,7 @@ exports.createOrder = async (req, res) => {
     });
   }
 };
+
 
 exports.getOrderById = async (req, res) => {
   try {
@@ -326,6 +521,8 @@ exports.updateOrderStatus = async (req, res) => {
     ).populate('shop', 'name')
       .populate('items.product', 'name image price')
       .populate('statusHistory.updatedBy', 'username');
+      // .populate('items.product', 'name image price')
+      // .populate('statusHistory.updatedBy', 'username');
 
     // Send notification to user (you can implement this based on your notification system)
     // await notifyUser(order.user, `Your order status has been updated to ${status}`);
