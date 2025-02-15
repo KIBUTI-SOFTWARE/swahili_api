@@ -19,7 +19,7 @@ connectDB();
 // Init Middleware
 app.use(express.json({ extended: false }));
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+app.use(cors()); 
 app.use(compression()); // Compress responses
 app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ extended: true }));
