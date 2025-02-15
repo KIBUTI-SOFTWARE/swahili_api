@@ -43,7 +43,8 @@ const orderSchema = new mongoose.Schema({
     city: String,
     state: String,
     zipCode: String,
-    country: String
+    country: String,
+    phone: String // Added phone as it's needed for mobile money
   },
   paymentMethod: {
     type: String,
@@ -52,27 +53,33 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed'],
+    enum: ['pending', 'completed', 'failed', 'cancelled'],
     default: 'pending'
   },
   paymentDetails: {
     transactionId: String,
     provider: String,
-    status: String,
-    lastUpdated: {
-      type: Date,
-      default: Date.now
-    }
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'cancelled']
+    },
+    message: String,
+    initiatedAt: Date,
+    paidAt: Date,
+    failedAt: Date,
+    cancelledAt: Date,
+    paymentReference: String,
+    failureReason: String
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending'
+    enum: ['pending_payment', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending_payment'
   },
   statusHistory: [{
     status: {
       type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending_payment', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'],
       required: true
     },
     timestamp: {
@@ -108,8 +115,36 @@ orderSchema.pre('save', function(next) {
     // Generate a unique order number (you can customize this format)
     this.orderNumber = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
   }
+  
+  // Add status to history if it's changed
+  if (this.isModified('status')) {
+    if (!this.statusHistory) {
+      this.statusHistory = [];
+    }
+    
+    // Only add to history if this isn't a new document
+    if (!this.isNew) {
+      this.statusHistory.push({
+        status: this.status,
+        timestamp: new Date(),
+        updatedBy: this._updatedBy // This should be set before saving
+      });
+    }
+  }
+  
   this.updatedAt = Date.now();
   next();
 });
+
+// Add a method to update payment status
+orderSchema.methods.updatePaymentStatus = function(paymentData) {
+  this.paymentStatus = paymentData.status;
+  this.paymentDetails = {
+    ...this.paymentDetails,
+    ...paymentData,
+    status: paymentData.status,
+    updatedAt: new Date()
+  };
+};
 
 module.exports = mongoose.model('Order', orderSchema);

@@ -4,13 +4,12 @@ const connectDB = require('./src/config/db');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-// const connectDB = require('./src/config/db');
 const { requestLogger } = require('./src/middleware/logger');
 const errorHandler = require('./src/middleware/errorHandler');
 const paginateResults = require('./src/middleware/pagination');
 const { apiLimiter } = require('./src/middleware/rateLimiter');
 const securityMiddleware = require('./src/middleware/security');
-
+const webhookRoutes=require('./src/routes/webhooks')
 const swagger = require('./src/config/swagger');
 const app = express();
 
@@ -33,7 +32,7 @@ app.use('/api-docs', swagger.serve, swagger.setup);
 // Rate limiting
 app.use('/api/v1/', apiLimiter);
 
-// Define Routes
+// Routes
 app.use('/api/v1/auth', require('./src/routes/auth'));
 app.use('/api/v1/products', require('./src/routes/products'));
 app.use('/api/v1/categories', require('./src/routes/categories'));
@@ -45,6 +44,8 @@ app.use('/api/v1/orders', require('./src/routes/orders'));
 app.use('/api/v1/ratings', require('./src/routes/ratings'));
 app.use('/api/v1/chat', require('./src/routes/chat'));
 app.use('/api/v1/notifications', require('./src/routes/notifications'));
+app.use('/api/v1/webhooks',webhookRoutes)
+
 // Error handling
 app.use(errorHandler);
 
