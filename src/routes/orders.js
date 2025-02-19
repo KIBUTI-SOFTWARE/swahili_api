@@ -348,6 +348,49 @@ router.get('/:id', orderController.getOrderById);
 
 /**
  * @swagger
+ * /api/v1/orders/{orderId}/payment-status:
+ *   get:
+ *     summary: Check payment status from Zenopay
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the order to check payment status
+ *     responses:
+ *       200:
+ *         description: Payment status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     paymentStatus:
+ *                       type: string
+ *                     transactionId:
+ *                       type: string
+ *                     paymentDetails:
+ *                       type: object
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: []
+ */
+router.get('/:orderId/payment-status',auth, orderController.checkPaymentStatus);
+
+/**
+ * @swagger
  * /api/v1/orders/{orderId}/status:
  *   patch:
  *     summary: Update order status
@@ -413,4 +456,72 @@ router.get('/:id', orderController.getOrderById);
  */
 router.patch('/:orderId/status', auth, orderController.updateOrderStatus);
 
+/**
+ * @swagger
+ * /api/v1/orders/{orderId}/payment-status:
+ *   patch:
+ *     summary: Update order payment status
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               paymentStatus:
+ *                 type: string
+ *                 enum: [pending, completed, failed, cancelled]
+ *               transactionId:
+ *                 type: string
+ *               paymentDetails:
+ *                 type: object
+ */
+router.patch('/:orderId/payment-status', auth, orderController.updatePaymentStatus);
+
+/**
+ * @swagger
+ * /api/v1/orders/shop:
+ *   get:
+ *     summary: Get all orders for the authenticated shop owner
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: paymentStatus
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ */
+router.get('/shop', auth, orderController.getShopOrders);
 module.exports = router;
