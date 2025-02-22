@@ -45,7 +45,8 @@ app.use('/api/v1/ratings', require('./src/routes/ratings'));
 app.use('/api/v1/chat', require('./src/routes/chat'));
 app.use('/api/v1/notifications', require('./src/routes/notifications'));
 app.use('/api/v1/webhooks',webhookRoutes)
-
+app.use('/api/v1/profile', require('./src/routes/profile'));
+app.use('/api/v1/account', require('./src/routes/account'));
 // Error handling
 app.use(errorHandler);
 

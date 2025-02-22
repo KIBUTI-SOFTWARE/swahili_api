@@ -18,7 +18,9 @@
     "seed:demo": "node scripts/seed/demo-products.js",
     "monitor": "node scripts/monitor/performance-metrics.js",
     "cleanup": "node scripts/maintenance/clean-uploads.js",
-    "health": "node scripts/monitor/health-check.js"
+    "health": "node scripts/monitor/health-check.js",
+    "cleanup-accounts": "node src/scripts/cleanupDeletedAccounts.js"
+
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.714.0",

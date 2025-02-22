@@ -109,6 +109,30 @@ const userSchema = new mongoose.Schema({
     },
     timezone: String
   },
+  paymentMethods: [{
+    type: {
+      type: String,
+      enum: ['card', 'mobile_money', 'bank'],
+      required: true
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
+    },
+    details: {
+      // For cards
+      last4: String,
+      brand: String,
+      expiryMonth: Number,
+      expiryYear: Number,
+      // For mobile money
+      phoneNumber: String,
+      provider: String,
+      // For bank
+      bankName: String,
+      accountNumber: String
+    }
+  }],
   expoPushToken: String,
   notifications: {
     type: [notificationSettingsSchema],

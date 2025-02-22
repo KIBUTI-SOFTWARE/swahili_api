@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { User } = require('../models/User');
+const Shop = require('../models/Shop')
 const mongoose = require('mongoose');
 const { isValidObjectId } = mongoose;
 const paymentService = require('../services/paymentService');
@@ -669,6 +670,112 @@ exports.getShopOrders = async (req, res) => {
           totalOrders: 0,
           totalRevenue: 0,
           averageOrderValue: 0
+        }
+      },
+      errors: []
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      data: null,
+      errors: [err.message]
+    });
+  }
+};
+
+exports.getMyShop = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    // Get shop details
+    const shop = await Shop.findOne({ owner: userId })
+      .select('name description image rating');
+
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        errors: ['Shop not found']
+      });
+    }
+
+    // Build date range query
+    let dateQuery = {};
+    if (startDate || endDate) {
+      dateQuery.createdAt = {};
+      if (startDate) {
+        dateQuery.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        dateQuery.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Get order statistics
+    const orderStats = await Order.aggregate([
+      {
+        $match: {
+          shop: shop._id,
+          ...dateQuery
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$amounts.total' },
+          averageOrderValue: { $avg: '$amounts.total' },
+          ordersByStatus: {
+            $push: '$status'
+          }
+        }
+      }
+    ]);
+
+    // Calculate status counts
+    const statusCounts = orderStats[0]?.ordersByStatus.reduce((acc, status) => {
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {}) || {};
+
+    // Get recent orders
+    const recentOrders = await Order.find({ shop: shop._id })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('user', 'name')
+      .populate('items.product', 'name image price');
+
+    res.json({
+      success: true,
+      data: {
+        shop: {
+          _id: shop._id,
+          name: shop.name,
+          description: shop.description,
+          image: shop.image,
+          rating: shop.rating,
+          totalOrders: orderStats[0]?.totalOrders || 0,
+          statistics: {
+            totalRevenue: orderStats[0]?.totalRevenue || 0,
+            averageOrderValue: orderStats[0]?.averageOrderValue || 0,
+            ordersByStatus: {
+              pending: statusCounts.pending || 0,
+              processing: statusCounts.processing || 0,
+              shipped: statusCounts.shipped || 0,
+              delivered: statusCounts.delivered || 0,
+              cancelled: statusCounts.cancelled || 0
+            }
+          },
+          recentOrders: recentOrders.map(order => ({
+            _id: order._id,
+            orderNumber: order.orderNumber,
+            customer: order.user.name,
+            amount: order.amounts.total,
+            status: order.status,
+            createdAt: order.createdAt
+          }))
         }
       },
       errors: []

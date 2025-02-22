@@ -11,7 +11,7 @@ exports.uploadImage = async (req, res) => {
       });
     }
 
-    console.log('File received:', req.file); // Add this for debugging
+    console.log('File received:', req.file);
 
     // Upload to Cloudinary
     const imageUrl = await uploadToCloudinary(req.file, req.query.folder || 'general');
@@ -59,7 +59,7 @@ exports.uploadMultipleImages = async (req, res) => {
       });
     }
 
-    console.log('Files received:', req.files); // Add this for debugging
+    // console.log('Files received:', req.files); 
 
     const uploadPromises = req.files.map(async (file) => {
       const imageUrl = await uploadToCloudinary(file, req.query.folder || 'general');

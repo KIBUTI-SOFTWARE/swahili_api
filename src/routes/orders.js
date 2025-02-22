@@ -301,6 +301,128 @@ router.get('/statuses', auth, orderController.getOrderStatuses);
 
 /**
  * @swagger
+ * /api/v1/orders/shop:
+ *   get:
+ *     summary: Get all orders for the authenticated shop owner
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: paymentStatus
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ */
+router.get('/shop', auth, orderController.getShopOrders);
+
+/**
+ * @swagger
+ * /api/v1/orders/my-shop:
+ *   get:
+ *     summary: Get authenticated user's shop details with order statistics
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for order statistics (YYYY-MM-DD)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for order statistics (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: Shop details with order statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     shop:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         description:
+ *                           type: string
+ *                         image:
+ *                           type: string
+ *                         rating:
+ *                           type: number
+ *                         totalOrders:
+ *                           type: number
+ *                         statistics:
+ *                           type: object
+ *                           properties:
+ *                             totalRevenue:
+ *                               type: number
+ *                             averageOrderValue:
+ *                               type: number
+ *                             ordersByStatus:
+ *                               type: object
+ *                               properties:
+ *                                 pending:
+ *                                   type: number
+ *                                 processing:
+ *                                   type: number
+ *                                 shipped:
+ *                                   type: number
+ *                                 delivered:
+ *                                   type: number
+ *                                 cancelled:
+ *                                   type: number
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: []
+ *       401:
+ *         description: Unauthorized - User not logged in
+ *       404:
+ *         description: Shop not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/my-shop', auth, orderController.getMyShop);
+
+/**
+ * @swagger
  * /api/v1/orders/{id}:
  *   get:
  *     summary: Get order by ID
@@ -487,41 +609,5 @@ router.patch('/:orderId/status', auth, orderController.updateOrderStatus);
  */
 router.patch('/:orderId/payment-status', auth, orderController.updatePaymentStatus);
 
-/**
- * @swagger
- * /api/v1/orders/shop:
- *   get:
- *     summary: Get all orders for the authenticated shop owner
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *       - in: query
- *         name: paymentStatus
- *         schema:
- *           type: string
- *       - in: query
- *         name: startDate
- *         schema:
- *           type: string
- *           format: date
- *       - in: query
- *         name: endDate
- *         schema:
- *           type: string
- *           format: date
- */
-router.get('/shop', auth, orderController.getShopOrders);
+
 module.exports = router;

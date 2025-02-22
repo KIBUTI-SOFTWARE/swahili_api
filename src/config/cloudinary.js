@@ -15,7 +15,9 @@ const uploadToCloudinary = async (file, folder) => {
       folder: `swahili_marketplace/${folder}`,
       allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp'],
       transformation: [
-        { width: 500, height: 500, crop: 'limit' }
+        { width: 500, height: 500, crop: 'limit' },
+        {quality: "auto:best"},
+        {fetch_format: "auto"}
       ]
     });
     return result.secure_url;
