@@ -47,6 +47,9 @@ app.use('/api/v1/notifications', require('./src/routes/notifications'));
 app.use('/api/v1/webhooks',webhookRoutes)
 app.use('/api/v1/profile', require('./src/routes/profile'));
 app.use('/api/v1/account', require('./src/routes/account'));
+app.use('/api/v1/wishlist', require('./src/routes/wishlist'));
+app.use('/api/v1/announcements', require('./src/routes/announcements'));
+
 // Error handling
 app.use(errorHandler);
 

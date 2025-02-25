@@ -11,7 +11,7 @@ exports.uploadImage = async (req, res) => {
       });
     }
 
-    console.log('File received:', req.file);
+    // console.log('File received:', req.file);
 
     // Upload to Cloudinary
     const imageUrl = await uploadToCloudinary(req.file, req.query.folder || 'general');
