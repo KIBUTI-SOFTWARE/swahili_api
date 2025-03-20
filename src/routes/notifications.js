@@ -20,4 +20,60 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// Add bulk mark as read
+router.post('/mark-all-read', auth, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { recipient: req.user._id },
+      { read: true }
+    );
+
+    res.json({
+      success: true,
+      data: { message: 'All notifications marked as read' },
+      errors: []
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      errors: [error.message],
+      data: null
+    });
+  }
+});
+
+
+router.patch('/:notificationId/read', auth, async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { 
+        _id: req.params.notificationId,
+        recipient: req.user._id // Security check
+      },
+      { read: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        errors: ['Notification not found'],
+        data: null
+      });
+    }
+
+    res.json({
+      success: true,
+      data: notification,
+      errors: []
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      errors: [error.message],
+      data: null
+    });
+  }
+});
+
 module.exports = router;
