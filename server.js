@@ -9,19 +9,36 @@ const errorHandler = require('./src/middleware/errorHandler');
 const paginateResults = require('./src/middleware/pagination');
 const { apiLimiter } = require('./src/middleware/rateLimiter');
 const securityMiddleware = require('./src/middleware/security');
-const webhookRoutes=require('./src/routes/webhooks')
+const webhookRoutes = require('./src/routes/webhooks')
 const swagger = require('./src/config/swagger');
 const app = express();
+const WishlistReminderService = require('./src/services/wishlistReminderService');
 
-// Connect Database
-connectDB();
+
+
+// Initialize database and services
+async function initializeApp() {
+    try {
+        await connectDB();
+        console.log('Database connected successfully');
+
+        await WishlistReminderService.sendWishlistReminders();
+        console.log('Wishlist reminders sent successfully');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        process.exit(1);
+    }
+}
+
+// Call initialization
+initializeApp().catch(console.error);
 
 // Init Middleware
 app.use(express.json({ extended: false }));
 app.use(helmet()); // Security headers
-app.use(cors()); 
+app.use(cors());
 app.use(compression()); // Compress responses
-app.use(express.json({ limit: '10mb' })); 
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger); // Request logging
 app.use(paginateResults);
@@ -44,7 +61,7 @@ app.use('/api/v1/orders', require('./src/routes/orders'));
 app.use('/api/v1/ratings', require('./src/routes/ratings'));
 app.use('/api/v1/chat', require('./src/routes/chat'));
 app.use('/api/v1/notifications', require('./src/routes/notifications'));
-app.use('/api/v1/webhooks',webhookRoutes)
+app.use('/api/v1/webhooks', webhookRoutes)
 app.use('/api/v1/profile', require('./src/routes/profile'));
 app.use('/api/v1/account', require('./src/routes/account'));
 app.use('/api/v1/wishlist', require('./src/routes/wishlist'));
